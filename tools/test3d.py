@@ -2,7 +2,7 @@
 import asyncio, os, json, time
 from playwright.async_api import async_playwright
 ROOT=os.path.dirname(os.path.abspath(__file__))+'/..'
-URL='file://'+os.path.abspath(ROOT)+'/'+os.environ.get('PAGE','index.html')
+URL=os.environ.get('URL') or 'file://'+os.path.abspath(ROOT)+'/'+os.environ.get('PAGE','index.html')
 OUT=os.environ.get('OUT','/tmp/t3/shots'); os.makedirs(OUT,exist_ok=True)
 VW,VH=[int(v) for v in os.environ.get('VP','1280x720').split('x')]
 TOUCH=os.environ.get('TOUCH')=='1'
