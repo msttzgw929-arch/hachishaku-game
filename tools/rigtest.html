@@ -1,0 +1,24 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#223;}canvas{display:block}</style></head><body>
+<canvas id="c" width="900" height="1000"></canvas>
+<script src="../src/assets.js"></script><script src="../src/gl.js"></script><script src="../src/hachi.js"></script>
+<script>
+const q=new URLSearchParams(location.search);
+function load(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});}
+(async()=>{
+ const imgs={};for(const k in ASSETS.img)imgs[k]=await load(ASSETS.img[k]);
+ const R=new Renderer(document.getElementById('c'));
+ const H=new Hachi(R,imgs,ASSETS.meta);window.H=H;
+ H.setGrowth(+(q.get('g')||1));H.b.g=+(q.get('g')||1);
+ const mood=q.get('mood')||'calm',speed=+(q.get('speed')||0),T=+(q.get('t')||1.0),state=q.get('state')||'chase';
+ const steps=Math.round(T*60);
+ if(q.get('hit'))setTimeout(()=>{},0);
+ for(let i=0;i<steps;i++){H.update(1/60,{speed:speed,vx:+(q.get('vx')||0),mood:mood,state:state,grab:q.get('grab')==='1',frust:+(q.get('frust')||0)});
+   if(q.get('hit')&&i===steps-Math.round(+q.get('hit')*60))H.hit(450,900,1);
+   if(q.get('chant')&&i===steps-20)H.startChant(3);}
+ const ppu=+(q.get('ppu')||1.9);
+ R.begin(900,1000);
+ const fx=+(q.get('fx')||610),fy=q.get('fy')?+q.get('fy'):null;const view=fy===null?{x:450+(683-610)*ppu*0.251,y:980,ppu:ppu}:{x:450-(fx-683)*ppu*0.251,y:500-(fy-1895)*ppu*0.251,ppu:ppu};
+ H.draw(view);R.end();
+ window.done=true;
+})();
+</script></body></html>

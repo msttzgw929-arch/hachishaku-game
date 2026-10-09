@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#05050c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>八尺様から逃げろ！</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%91%92%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="bg"></canvas>
+  <canvas id="gl"></canvas>
+  <canvas id="fx"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div id="portrait"><div class="pframe"></div><div id="moodTxt">にこにこ</div></div>
+    <div id="topc">
+      <div id="time">0.0<small>秒</small></div>
+      <div id="best">ベスト 0.0秒</div>
+    </div>
+    <div id="meters">
+      <div class="mrow"><span class="mlab">イライラ</span><span id="lv">Lv.0</span></div>
+      <div class="bar"><div id="frust"></div><div class="tick" style="left:50%"></div></div>
+      <div class="mrow small"><span>お腹サイズ</span><span id="bsize">×1.00</span></div>
+    </div>
+    <div id="btns">
+      <button id="bMute" class="ib" aria-label="サウンド">🔊</button>
+      <button id="bPause" class="ib" aria-label="一時停止">⏸</button>
+    </div>
+    <div id="hint">ドラッグ / 矢印キー・WASD で移動</div>
+  </div>
+
+  <!-- restraint UI -->
+  <div id="grab" class="hidden">
+    <div id="grabTitle">つかまった！</div>
+    <div id="grabSub">お腹を<b>連打</b>して脱出！</div>
+    <div class="gbar"><div id="gfill"></div><div id="gtime"></div></div>
+    <div id="grabKey">タップ / クリック / スペースキー</div>
+  </div>
+
+  <div id="banner"></div>
+  <div id="joy" class="hidden"><div id="knob"></div></div>
+
+  <!-- title -->
+  <div id="title" class="screen">
+    <div id="titleArt"></div>
+    <div class="tvig"></div>
+    <div class="tcontent">
+      <div class="tsub">真夜中の路地裏ホラー鬼ごっこ</div>
+      <h1 id="logo"><span>八尺様</span><span class="kara">から</span><span class="nige">逃げろ！</span></h1>
+      <div class="poppo">ぽ…ぽぽ…ぽぽぽ……</div>
+      <button id="bStart" class="big">はじめる</button>
+      <button id="bHow" class="sub">あそびかた</button>
+      <div id="tBest"></div>
+    </div>
+    <div id="loading">よみこみ中…</div>
+  </div>
+
+  <div id="how" class="screen modal hidden">
+    <div class="card">
+      <h2>あそびかた</h2>
+      <ul>
+        <li><b>移動</b>：画面をドラッグ（スマホ）／矢印キー・WASD（PC）。マウスでもドラッグで動けます。</li>
+        <li><b>逃げる</b>：お腹の大きな八尺様に近づかれると<b>捕まって</b>しまいます。</li>
+        <li><b>脱出</b>：捕まったら八尺様の<b>お腹を連打</b>！（タップ・クリック・スペース）ゲージが満タンで脱出、空になるか時間切れでゲームオーバー。</li>
+        <li><b>イライラ</b>：捕まえられないと八尺様はイライラして<b>お腹がどんどん巨大化</b>。上限はありません…。</li>
+        <li><b>突進</b>：「ぽぽぽ！」と身構えたら突進の合図。横に避けよう。</li>
+        <li><b>スコア</b>：生き延びた時間。ベスト記録は自動保存されます。</li>
+      </ul>
+      <button id="bHowClose" class="big">わかった</button>
+    </div>
+  </div>
+
+  <div id="pause" class="screen modal hidden">
+    <div class="card center">
+      <h2>一時停止</h2>
+      <button id="bResume" class="big">つづける</button>
+      <button id="bQuit" class="sub">タイトルへ</button>
+    </div>
+  </div>
+
+  <div id="over" class="screen modal hidden">
+    <div class="card center">
+      <div class="otitle">つかまった…</div>
+      <div class="opopo">ぽぽぽぽぽ♪</div>
+      <div class="ostat"><span>生存時間</span><b id="oTime">0.0秒</b></div>
+      <div class="ostat"><span>イライラ到達</span><b id="oLv">Lv.0</b></div>
+      <div class="ostat"><span>脱出回数</span><b id="oEsc">0回</b></div>
+      <div class="ostat"><span>最終お腹サイズ</span><b id="oSize">×1.00</b></div>
+      <div id="oNew" class="hidden">★ ベスト更新！ ★</div>
+      <div id="oBest"></div>
+      <button id="bRetry" class="big">もう一回</button>
+      <button id="bTitle" class="sub">タイトルへ</button>
+    </div>
+  </div>
+
+  <div id="err" class="hidden"></div>
+</div>
+<script src="src/assets.js"></script>
+<script src="src/audio.js"></script>
+<script src="src/gl.js"></script>
+<script src="src/bg.js"></script>
+<script src="src/player.js"></script>
+<script src="src/hachi.js"></script>
+<script src="src/game.js"></script>
+</body>
+</html>
