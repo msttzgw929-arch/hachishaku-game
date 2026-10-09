@@ -913,12 +913,16 @@ function Hachi(R,imgs,meta){
   this.m.legR=new Mesh(L.legR,3,6);
   this.m.skirt=new Mesh(L.skirt,18,14);
   this.m.belly=new Mesh(L.belly,26,26);
-  this.m.upper=new Mesh(L.upper,30,24);
+  this.m.upper=new Mesh(L.upper,62,47); // 10px cells so arm weights can avoid the hat brim exactly
   const F=meta.faces;
   this.m.face=new Mesh({x:F.x,y:F.y,w:F.w,h:F.h},30,26,{atlas:true});
   // static weights for upper body / face / hair
-  const armL=(x,y)=>{const ax=452,ay=250,bx=476,by=440;const d=((bx-ax)*(y-ay)-(by-ay)*(x-ax))/191;return ss(-10,10,d)*ss(470,415,y);};
-  const armR=(x,y)=>{const ax=768,ay=250,bx=742,by=440;const d=-((bx-ax)*(y-ay)-(by-ay)*(x-ax))/191;return ss(-10,10,d)*ss(470,415,y);};
+  // arm/bust boundary traced from the art; weight is exactly 0 on every mesh vertex touching bust pixels (10px cells)
+  const pl=(y,P)=>{if(y<=P[0][0])return P[0][1];for(let k=1;k<P.length;k++)if(y<=P[k][0]){const a=P[k-1],b=P[k];return a[1]+(b[1]-a[1])*(y-a[0])/(b[0]-a[0]);}return P[P.length-1][1];};
+  const BL=[[200,450],[250,440],[285,432],[320,436],[345,446],[370,456],[400,462],[440,472]];
+  const BR=[[200,770],[250,775],[280,779],[320,778],[345,771],[370,764],[400,760],[440,750]];
+  const armL=(x,y)=>{const bx=pl(y,BL);return ss(bx-10,bx-35,x)*ss(470,415,y)*ss(338,278,y)*Math.max(ss(190,200,y),ss(410,400,x));};
+  const armR=(x,y)=>{const bx=pl(y,BR);return ss(bx+10,bx+35,x)*ss(470,415,y)*ss(338,278,y)*Math.max(ss(170,180,y),ss(800,810,x));};
   const head=(x,y)=>ss(245,192,y)*lerp(1,ss(432,478,x)*ss(788,742,x),ss(130,180,y));
   const hat=(x,y)=>ss(196,168,y)*(1-ss(1.25,0.85,Math.pow((x-606)/66,2)+Math.pow((y-152)/58,2)));
   const hairF=(x,y)=>ss(195,330,y)*Math.max(ss(468,492,x)*ss(560,535,x),ss(655,680,x)*ss(752,728,x))*ss(360,320,y)+
@@ -1028,16 +1032,16 @@ Hachi.prototype.update=function(dt,o){
   if(mood==='glee')hr+=Math.sin(t*6)*0.07;
   if(mood==='shock')hr+=Math.sin(t*18)*0.025;
   hr+=s*0.015*wa;
-  spring(p,'headRot',hr,3,0.5,dt);
-  spring(p,'hatRot',p.headRot+(o.vx||0)*-0.00006-b.by*0.0003,1.8,0.25,dt);
+  // head & hat are kept rigid (no tilt, no brim trailing) by request
+  p.headRot=0;p.hatRot=0;
   // arms
   let al=Math.sin(t*2.1)*0.04,ar=Math.sin(t*2.1+1)*0.04;
-  if(mood==='eager'){al=Math.sin(t*9)*0.12-0.06;ar=Math.sin(t*9+Math.PI)*0.12+0.06;}
-  if(mood==='angry'){al=Math.sin(t*33)*0.05+0.12;ar=-Math.sin(t*31)*0.05-0.12;}
-  if(mood==='glee'){al=Math.sin(t*11)*0.2-0.12;ar=Math.sin(t*11)*0.2*-1+0.12;}
-  if(mood==='shock'){al=0.22;ar=-0.22;}
-  if(o.state==='windup'){al=-0.25;ar=0.25;}
-  if(o.state==='dash'){al=0.18;ar=-0.18;}
+  if(mood==='eager'){al=Math.sin(t*9)*0.09-0.04;ar=Math.sin(t*9+Math.PI)*0.09+0.04;}
+  if(mood==='angry'){al=Math.sin(t*33)*0.04+0.08;ar=-Math.sin(t*31)*0.04-0.08;}
+  if(mood==='glee'){al=Math.sin(t*11)*0.12-0.06;ar=Math.sin(t*11)*0.12*-1+0.06;}
+  if(mood==='shock'){al=0.14;ar=-0.14;}
+  if(o.state==='windup'){al=-0.15;ar=0.15;}
+  if(o.state==='dash'){al=0.12;ar=-0.12;}
   al+=c*0.06*wa;ar+=c*0.06*wa;
   spring(p,'armL',al,3.5,0.35,dt);spring(p,'armR',ar,3.5,0.35,dt);
   spring(p,'hairSway',clamp(-(o.vx||0)*0.004,-1.4,1.4)+Math.sin(t*1.3)*0.15+ s*0.25*wa - p.headRot*4,1.4,0.18,dt);
@@ -1082,15 +1086,14 @@ Hachi.prototype.defUpper=function(m,i,out){
   const p=this.p;let x=m.sx[i],y=m.sy[i];
   const W=m.w;
   // breathing (chest)
-  const wc=W.chest[i];if(wc){x+=(x-610)*p.breath*wc*0.7;y+=(y-330)*p.breath*wc;}
+  // chest/bust: rigid (no breathing / wobble deformation)
   // arms
   rot(x,y,476,446,p.armL,W.armL[i],tmp);x=tmp[0];y=tmp[1];
   rot(x,y,742,446,p.armR,W.armR[i],tmp);x=tmp[0];y=tmp[1];
   // head & hat
-  rot(x,y,607,222,p.headRot,W.head[i],tmp);x=tmp[0];y=tmp[1];
-  rot(x,y,607,120,clamp(p.hatRot-p.headRot,-0.05,0.05),W.hat[i],tmp);x=tmp[0];y=tmp[1];
+  // head/hat: rigid
   // front hair sway
-  const wh=W.hairF[i];if(wh){x+=p.hairSway*9*wh;y-=Math.abs(p.hairSway)*1.5*wh;}
+  // front hair strands lie on top of the bust in the same layer, so they are not warped (keeps chest rigid)
   const u=this.uScale();
   out[0]=610+(x-610)*u;out[1]=470+(y-470)*u;
 };
