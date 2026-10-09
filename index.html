@@ -11,9 +11,10 @@
 </head>
 <body>
 <div id="app">
-  <canvas id="bg"></canvas>
   <canvas id="gl"></canvas>
+  <div id="vig"></div><div id="tense"></div>
   <canvas id="fx"></canvas>
+  <div id="flash"></div>
 
   <!-- HUD -->
   <div id="hud" class="hidden">
@@ -26,12 +27,14 @@
       <div class="mrow"><span class="mlab">イライラ</span><span id="lv">Lv.0</span></div>
       <div class="bar"><div id="frust"></div><div class="tick" style="left:50%"></div></div>
       <div class="mrow small"><span>お腹サイズ</span><span id="bsize">×1.00</span></div>
+      <div id="mmwrap"><canvas id="minimap"></canvas><div id="dist">0m</div></div>
     </div>
+    <div id="xhair"></div>
     <div id="btns">
       <button id="bMute" class="ib" aria-label="サウンド">🔊</button>
       <button id="bPause" class="ib" aria-label="一時停止">⏸</button>
     </div>
-    <div id="hint">ドラッグ / 矢印キー・WASD で移動</div>
+    <div id="hint">WASD／矢印：移動　マウス：視点</div>
   </div>
 
   <!-- restraint UI -->
@@ -43,14 +46,17 @@
   </div>
 
   <div id="banner"></div>
-  <div id="joy" class="hidden"><div id="knob"></div></div>
+  <div id="sticks" class="hidden">
+    <div id="stickL" class="stick"><div id="knobL" class="knob"></div><span>移動</span></div>
+    <div id="stickR" class="stick"><div id="knobR" class="knob"></div><span>視点</span></div>
+  </div>
 
   <!-- title -->
   <div id="title" class="screen">
     <div id="titleArt"></div>
     <div class="tvig"></div>
     <div class="tcontent">
-      <div class="tsub">真夜中の路地裏ホラー鬼ごっこ</div>
+      <div class="tsub">一人称3D・真夜中の路地裏ホラー鬼ごっこ</div>
       <h1 id="logo"><span>八尺様</span><span class="kara">から</span><span class="nige">逃げろ！</span></h1>
       <div class="poppo">ぽ…ぽぽ…ぽぽぽ……</div>
       <button id="bStart" class="big">はじめる</button>
@@ -64,11 +70,12 @@
     <div class="card">
       <h2>あそびかた</h2>
       <ul>
-        <li><b>移動</b>：画面をドラッグ（スマホ）／矢印キー・WASD（PC）。マウスでもドラッグで動けます。</li>
-        <li><b>逃げる</b>：お腹の大きな八尺様に近づかれると<b>捕まって</b>しまいます。</li>
-        <li><b>脱出</b>：捕まったら八尺様の<b>お腹を連打</b>！（タップ・クリック・スペース）ゲージが満タンで脱出、空になるか時間切れでゲームオーバー。</li>
+        <li><b>スマホ</b>：画面の<b>左半分</b>をなぞると移動スティック、<b>右半分</b>で視点スティック。上に倒すと巨大な八尺様を<b>見上げられます</b>。</li>
+        <li><b>PC</b>：WASD／矢印キーで移動、マウスで視点（画面クリックで視点ロック、Escで解除・一時停止）。ドラッグでも視点を動かせます。</li>
+        <li><b>逃げる</b>：夜の町（路地・通り・空き地）のどこかから八尺様が追ってきます。右上の<b>レーダー</b>（赤い点）と画面端の<b>矢印</b>で位置を確認！近づかれると<b>捕まって</b>しまいます。</li>
+        <li><b>脱出</b>：捕まると目の前が八尺様のお腹でいっぱいに…。<b>お腹を連打</b>！（タップ・クリック・スペース）ゲージが満タンで脱出、空になるか時間切れでゲームオーバー。</li>
         <li><b>イライラ</b>：捕まえられないと八尺様はイライラして<b>お腹がどんどん巨大化</b>。上限はありません…。</li>
-        <li><b>突進</b>：「ぽぽぽ！」と身構えたら突進の合図。横に避けよう。</li>
+        <li><b>突進</b>：「ぽぽぽ！」と身構え、地面に赤い線が出たら突進の合図。横へ避けよう。ぽぽぽの声は八尺様のいる方向から聞こえます（ヘッドホン推奨）。</li>
         <li><b>スコア</b>：生き延びた時間。ベスト記録は自動保存されます。</li>
       </ul>
       <button id="bHowClose" class="big">わかった</button>
@@ -100,12 +107,13 @@
 
   <div id="err" class="hidden"></div>
 </div>
+<script src="vendor/three.min.js"></script>
 <script src="src/assets.js"></script>
 <script src="src/audio.js"></script>
-<script src="src/gl.js"></script>
-<script src="src/bg.js"></script>
-<script src="src/player.js"></script>
 <script src="src/hachi.js"></script>
+<script src="src/tex3d.js"></script>
+<script src="src/world3d.js"></script>
+<script src="src/hachi3d.js"></script>
 <script src="src/game.js"></script>
 </body>
 </html>

@@ -15,7 +15,17 @@ A.init=function(){
   A.sfx=c.createGain();A.sfx.gain.value=1;A.sfx.connect(A.master);
   A.sfxRev=c.createGain();A.sfxRev.gain.value=0.35;A.sfx.connect(A.sfxRev);A.sfxRev.connect(A.rev);
   A.noise=noiseBuf(c,2);
+  // positional voice of 八尺様 (ぽぽぽ / footsteps) -> 3D panner
+  try{
+    const pn=c.createPanner();pn.panningModel='HRTF';pn.distanceModel='inverse';pn.refDistance=3.5;pn.maxDistance=90;pn.rolloffFactor=1.1;
+    A.herIn=c.createGain();A.herIn.connect(pn);pn.connect(A.sfx);A.pan=pn;
+  }catch(e){A.herIn=null;}
 };
+function setP(param,obj,key,v){if(param)param.setTargetAtTime(v,A.ctx.currentTime,0.03);else obj[key]=v;}
+A.setHer=function(x,y,z){if(!A.pan)return;const p=A.pan;if(p.positionX){setP(p.positionX,0,0,x);setP(p.positionY,0,0,y);setP(p.positionZ,0,0,z);}else p.setPosition(x,y,z);};
+A.setListener=function(x,y,z,fx,fy,fz){if(!A.ctx)return;const l=A.ctx.listener;
+  if(l.positionX){setP(l.positionX,0,0,x);setP(l.positionY,0,0,y);setP(l.positionZ,0,0,z);setP(l.forwardX,0,0,fx);setP(l.forwardY,0,0,fy);setP(l.forwardZ,0,0,fz);l.upX.value=0;l.upY.value=1;l.upZ.value=0;}
+  else{l.setPosition(x,y,z);l.setOrientation(fx,fy,fz,0,1,0);}};
 A.resume=function(){A.init();if(A.ctx&&A.ctx.state!=='running')A.ctx.resume();};
 A.setMuted=function(m){A.muted=m;if(A.master)A.master.gain.setTargetAtTime(m?0:0.9,A.ctx.currentTime,0.05);};
 function impulse(c,dur,decay){const n=c.sampleRate*dur,b=c.createBuffer(2,n,c.sampleRate);for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,decay);}return b;}
@@ -26,9 +36,10 @@ function noise(t,dur,filt,freq,q,gain,dest){
   const g=c.createGain();env(g,t,0.003,gain,dur*0.3,gain*0.3,dur*0.7);s.connect(f);f.connect(g);g.connect(dest||A.sfx);s.start(t,Math.random()*1.5);s.stop(t+dur+0.1);return f;
 }
 // ぽ syllable: plosive + formant-filtered glottal tone, deep & breathy
-A.po=function(pitch,angry,vol){
+A.po=function(pitch,angry,vol,spatial){
   if(!A.ctx||A.muted)return;const c=C(),t=c.currentTime+0.01;pitch=pitch||1;vol=vol==null?1:vol;
-  noise(t,0.05,'bandpass',1400,1.2,0.25*vol);
+  const dst=spatial&&A.herIn?A.herIn:A.sfx;
+  noise(t,0.05,'bandpass',1400,1.2,0.25*vol,dst);
   const o=c.createOscillator();o.type='sawtooth';const f0=(angry?150:118)*pitch;
   o.frequency.setValueAtTime(f0*1.12,t);o.frequency.exponentialRampToValueAtTime(f0*0.86,t+0.22);
   const vib=c.createOscillator();vib.frequency.value=5.5;const vg=c.createGain();vg.gain.value=3;vib.connect(vg);vg.connect(o.frequency);
@@ -42,21 +53,21 @@ A.po=function(pitch,angry,vol){
   // breathy noise through formant
   const s=c.createBufferSource();s.buffer=A.noise;const nb=c.createBiquadFilter();nb.type='bandpass';nb.frequency.value=600;nb.Q.value=3;const ng=c.createGain();ng.gain.value=0.25;
   s.connect(nb);nb.connect(ng);ng.connect(g);s.start(t,Math.random());s.stop(t+0.4);
-  g.connect(out);out.connect(A.sfx);
+  g.connect(out);out.connect(dst);
   const sg=c.createGain();sg.gain.value=0.6;g.connect(sg);sg.connect(A.rev);
   o.start(t);o.stop(t+0.45);vib.start(t);vib.stop(t+0.45);
 };
 // heavy footstep with belly "boyon"
-A.step=function(vol){
-  if(!A.ctx||A.muted)return;const c=C(),t=c.currentTime+0.005;vol=vol||1;
+A.step=function(vol,spatial){
+  if(!A.ctx||A.muted)return;const c=C(),t=c.currentTime+0.005;vol=vol||1;const dst=spatial&&A.herIn?A.herIn:A.sfx;
   const o=c.createOscillator();o.type='sine';o.frequency.setValueAtTime(90,t);o.frequency.exponentialRampToValueAtTime(38,t+0.18);
-  const g=c.createGain();env(g,t,0.004,0.55*vol,0.08,0.1,0.15);o.connect(g);g.connect(A.sfx);o.start(t);o.stop(t+0.35);
-  noise(t,0.08,'lowpass',400,0.7,0.2*vol);
+  const g=c.createGain();env(g,t,0.004,0.55*vol,0.08,0.1,0.15);o.connect(g);g.connect(dst);o.start(t);o.stop(t+0.35);
+  noise(t,0.08,'lowpass',400,0.7,0.2*vol,dst);
   // jiggle
   const o2=c.createOscillator();o2.type='sine';o2.frequency.setValueAtTime(70,t+0.05);o2.frequency.linearRampToValueAtTime(120,t+0.12);o2.frequency.linearRampToValueAtTime(80,t+0.24);
-  const g2=c.createGain();env(g2,t+0.05,0.02,0.18*vol,0.1,0.05,0.12);o2.connect(g2);g2.connect(A.sfx);o2.start(t+0.05);o2.stop(t+0.4);
+  const g2=c.createGain();env(g2,t+0.05,0.02,0.18*vol,0.1,0.05,0.12);o2.connect(g2);g2.connect(dst);o2.start(t+0.05);o2.stop(t+0.4);
 };
-A.patter=function(){if(!A.ctx||A.muted)return;const t=C().currentTime;noise(t,0.03,'highpass',2500,0.8,0.05);};
+A.patter=function(){if(!A.ctx||A.muted)return;const t=C().currentTime;noise(t,0.04,'bandpass',900+Math.random()*500,0.9,0.12);noise(t,0.03,'highpass',2500,0.8,0.05);};
 // slap on belly
 A.slap=function(power){
   if(!A.ctx||A.muted)return;const c=C(),t=c.currentTime+0.003;power=power||1;

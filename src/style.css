@@ -42,12 +42,29 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 #banner.show{animation:bnr 1.9s ease-out forwards}
 #banner .s{display:block;font-size:.5em;color:#ffd6dc;text-shadow:0 2px 6px #000}
 @keyframes bnr{0%{opacity:0;transform:scale(2.2)}12%{opacity:1;transform:scale(.95)}20%{transform:scale(1.04)}28%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1.05) translateY(-20px)}}
-#joy{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:radial-gradient(circle,rgba(255,255,255,.08),rgba(255,255,255,.02));pointer-events:none}
-#knob{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;background:rgba(255,255,255,.35);border:2px solid rgba(255,255,255,.7)}
+/* virtual sticks */
+#sticks{position:absolute;inset:0;pointer-events:none}
+.stick{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:radial-gradient(circle,rgba(255,255,255,.08),rgba(255,255,255,.02));opacity:.45;transition:opacity .2s}
+#stickL{left:max(90px,calc(env(safe-area-inset-left) + 80px));top:calc(100% - max(100px,calc(env(safe-area-inset-bottom) + 90px)))}
+#stickR{left:calc(100% - max(90px,calc(env(safe-area-inset-right) + 80px)));top:calc(100% - max(100px,calc(env(safe-area-inset-bottom) + 90px)))}
+.stick.on{opacity:1;transition:none}
+.stick span{position:absolute;left:0;right:0;bottom:-20px;text-align:center;font-size:11px;font-weight:800;opacity:.8;text-shadow:0 1px 3px #000}
+.stick.on span{display:none}
+.knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(255,255,255,.35);border:2px solid rgba(255,255,255,.75)}
+#stickR .knob{background:rgba(255,120,150,.35)}
+/* overlays */
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 45%,rgba(0,0,10,.55) 85%,rgba(0,0,8,.8) 100%)}
+#tense{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 40%,rgba(120,0,20,.55) 80%,rgba(160,0,30,.85) 100%)}
+#flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:#f24}
+#mmwrap{position:relative;width:clamp(96px,19vmin,140px);margin:8px 0 0 auto}
+#minimap{position:relative;width:100%;height:auto;aspect-ratio:1/1;border-radius:50%;box-shadow:0 0 0 2px rgba(0,0,0,.6),0 0 16px rgba(80,90,200,.35);pointer-events:none}
+#dist{position:absolute;left:0;right:0;bottom:-16px;text-align:center;font-size:clamp(10px,1.9vmin,13px);font-weight:900;color:#ff9aa8;text-shadow:0 1px 3px #000}
+#xhair{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 3px #000;display:none}
+#xhair.lock{display:block}
 /* screens */
 .screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
-#title{background:#05050c;overflow:hidden}
-#titleArt{position:absolute;inset:0 -4%;background-size:cover;background-position:center 30%;filter:brightness(.62) saturate(.9);animation:breathe 7s ease-in-out infinite}
+#title{background:linear-gradient(90deg,rgba(5,5,12,.55),rgba(5,5,12,.15));overflow:hidden}
+#titleArt{position:absolute;inset:0 -4%;background-size:cover;background-position:center 30%;filter:brightness(.62) saturate(.9);animation:breathe 7s ease-in-out infinite;opacity:.55}
 @media (min-aspect-ratio:1/1){#titleArt{background-size:contain;background-repeat:no-repeat;left:auto;right:4%;width:58%;}}
 @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
 .tvig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,transparent 30%,rgba(0,0,8,.85) 85%),linear-gradient(transparent 50%,rgba(3,3,10,.95));pointer-events:none}
@@ -85,3 +102,12 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 #oNew{margin:10px 0 0;font-weight:900;color:#ffe14d;font-size:clamp(18px,3.6vmin,24px);animation:fadepo 1s infinite}
 #oBest{margin:6px 0 4px;opacity:.75}
 #err{position:absolute;left:10px;right:10px;bottom:10px;padding:10px;background:#400;color:#fff;font-size:12px;white-space:pre-wrap;z-index:99;border-radius:8px}
+/* short landscape phones: compact result card so the buttons stay visible */
+@media (max-height:480px){
+  .card{padding:10px 16px 10px;max-height:94vh}
+  #over .card{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:center;width:min(640px,94vw)}
+  #over .otitle,#over .opopo,#over #oNew,#over #oBest{grid-column:1/-1}
+  #over .otitle{font-size:22px}#over .opopo{margin-bottom:2px}
+  #over .ostat{margin:2px 0;padding:4px 8px}
+  #over button.big{margin-top:6px;padding:10px 0}#over button.sub{margin-top:6px}
+}

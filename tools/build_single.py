@@ -14,8 +14,8 @@ print('hachishaku.html',os.path.getsize('hachishaku.html')//1024,'KB')
 keep=['index.html','hachishaku.html','README.md','.nojekyll']
 with zipfile.ZipFile('/workspace/hachishaku-game.zip','w',zipfile.ZIP_DEFLATED) as z:
     for f in keep: z.write(f,'hachishaku-game/'+f)
-    for d in ['src','assets','screenshots']:
+    for d in ['src','assets','screenshots','vendor']:
         for fn in sorted(os.listdir(d)): z.write(os.path.join(d,fn),'hachishaku-game/'+d+'/'+fn)
     for fn in sorted(os.listdir('tools')):
-        if fn.endswith('.py') or fn=='rigtest.html': z.write('tools/'+fn,'hachishaku-game/tools/'+fn)
+        if fn.endswith(('.py','.sh')) or fn in ('rigtest.html','three_entry.js'): z.write('tools/'+fn,'hachishaku-game/tools/'+fn)
 print('zip',os.path.getsize('/workspace/hachishaku-game.zip')//1024,'KB')
